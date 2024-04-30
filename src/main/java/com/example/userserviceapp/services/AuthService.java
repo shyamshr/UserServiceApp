@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMapAdapter;
 
@@ -25,13 +26,13 @@ import java.util.Optional;
 public class AuthService {
     private UserRepository userRepository;
     private SessionRepository sessionRepository;
-    private BCryptPasswordEncoder bCryptPasswordEncoder;
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
-    public AuthService(UserRepository userRepository, SessionRepository sessionRepository, BCryptPasswordEncoder bCryptPasswordEncoder) {
+    public AuthService(UserRepository userRepository, SessionRepository sessionRepository,PasswordEncoder passwordEncoder){
         this.userRepository = userRepository;
         this.sessionRepository = sessionRepository;
-        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+        this.passwordEncoder = passwordEncoder;
     }
     public ResponseEntity<UserDto> login(String email, String password) throws UserDoesntExistException, InvalidPasswordException {
         Optional<User> userOptional = userRepository.findByEmail(email);
@@ -39,7 +40,7 @@ public class AuthService {
             throw new UserDoesntExistException("User with email "+ email +" doesn't exists");
         }
         User user = userOptional.get();
-        if(!bCryptPasswordEncoder.matches(password,user.getPassword())){
+        if(!passwordEncoder.matches(password,user.getPassword())){
             throw new InvalidPasswordException("Password is invalid");
         }
         UserDto userDto = UserDto.from(user);
@@ -77,7 +78,7 @@ public class AuthService {
         }
         User user = new User();
         user.setEmail(email);
-        user.setPassword(bCryptPasswordEncoder.encode(password));
+        user.setPassword(passwordEncoder.encode(password));
         userRepository.save(user);
         return user;
     }
